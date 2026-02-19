@@ -6,9 +6,9 @@ import { ShirtIcon, UploadIcon, ChevronRightIcon, TrashIcon, CropIcon } from './
 interface GarmentLockPanelProps {
   config: GarmentLockConfig;
   onConfigChange: (config: GarmentLockConfig) => void;
-  garmentImages: ImageFile[];
-  onGarmentImagesChange: (files: ImageFile[]) => void;
-  onGarmentCropRequest: (index: number) => void;
+  garmentImage: ImageFile | null;
+  onGarmentImageChange: (file: ImageFile | null) => void;
+  onGarmentCropRequest: () => void;
   isOpen: boolean;
   onToggle: () => void;
 }
@@ -45,35 +45,18 @@ const ToggleControl = ({ label, checked, onChange }: { label: string, checked: b
 
 export const GarmentLockPanel: React.FC<GarmentLockPanelProps> = ({ 
     config, onConfigChange, 
-    garmentImages, onGarmentImagesChange, onGarmentCropRequest,
+    garmentImage, onGarmentImageChange, onGarmentCropRequest,
     isOpen, onToggle 
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-      const files = event.target.files;
-      if (!files) return;
-      
-      const newImages: ImageFile[] = [];
-      const fileList = Array.from(files) as File[];
-      const imageFiles = fileList.filter(file => file.type.startsWith('image/'));
-
-      let processedCount = 0;
-      imageFiles.forEach(file => {
+      const file = event.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
           const reader = new FileReader();
-          reader.onload = (e) => {
-              newImages.push({ dataUrl: e.target?.result as string, mimeType: file.type });
-              processedCount++;
-              if (processedCount === imageFiles.length) {
-                  onGarmentImagesChange([...garmentImages, ...newImages]);
-              }
-          };
+          reader.onload = (e) => onGarmentImageChange({ dataUrl: e.target?.result as string, mimeType: file.type });
           reader.readAsDataURL(file);
-      });
-  };
-
-  const removeImage = (index: number) => {
-      onGarmentImagesChange(garmentImages.filter((_, i) => i !== index));
+      }
   };
 
   const updateConfig = (key: keyof GarmentLockConfig, value: any) => {
@@ -89,7 +72,7 @@ export const GarmentLockPanel: React.FC<GarmentLockPanelProps> = ({
                 </div>
                 <div className="text-left">
                     <h3 className={`text-sm font-bold transition-colors ${isOpen ? 'text-dark-text dark:text-light-text' : 'text-medium-text dark:text-medium-text-dark'}`}>Garment Consistency Lock</h3>
-                    {isOpen && <p className="text-[10px] text-medium-text dark:text-medium-text-dark">Contextual synthesis from multiple clothing references</p>}
+                    {isOpen && <p className="text-[10px] text-medium-text dark:text-medium-text-dark">Apply fabric and silhouette from a specific reference</p>}
                 </div>
             </div>
             <div className="flex items-center gap-2">
@@ -115,39 +98,29 @@ export const GarmentLockPanel: React.FC<GarmentLockPanelProps> = ({
 
                 {config.enabled && (
                     <div className="flex flex-col gap-6">
-                        <div className="flex flex-col gap-3">
-                             <span className="text-[10px] font-bold text-medium-text dark:text-medium-text-dark uppercase tracking-wider">Garment Reference Pool (Contextual)</span>
-                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                                 {garmentImages.map((img, idx) => (
-                                     <div key={idx} className="relative group aspect-square rounded-lg overflow-hidden border border-light-border dark:border-dark-border bg-black/20 shadow-sm">
-                                         <img src={img.dataUrl} alt={`Garment ${idx}`} className="w-full h-full object-cover" />
-                                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                            <button 
-                                                onClick={() => onGarmentCropRequest(idx)}
-                                                className="p-1.5 bg-black/60 text-white rounded-md hover:bg-brand-red hover:text-dark-text transition-all"
-                                                title="Crop"
-                                            >
-                                                <CropIcon className="w-4 h-4" />
-                                            </button>
-                                            <button 
-                                                onClick={() => removeImage(idx)} 
-                                                className="p-1.5 bg-black/60 text-white rounded-md hover:bg-red-500 transition-all"
-                                                title="Remove"
-                                            >
-                                                <TrashIcon className="w-4 h-4" />
-                                            </button>
-                                         </div>
+                        <div className="flex flex-col gap-2">
+                             <span className="text-[10px] font-bold text-medium-text dark:text-medium-text-dark uppercase tracking-wider">Garment Reference (Input C)</span>
+                             {garmentImage ? (
+                                 <div className="relative group w-full h-40 rounded-lg overflow-hidden border border-light-border dark:border-dark-border bg-black/20">
+                                     <img src={garmentImage.dataUrl} alt="Garment" className="w-full h-full object-cover" />
+                                     <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button 
+                                            onClick={onGarmentCropRequest}
+                                            className="p-1.5 bg-black/60 text-white rounded-md hover:bg-brand-red hover:text-dark-text transition-all"
+                                            title="Crop image"
+                                        >
+                                            <CropIcon className="w-4 h-4" />
+                                        </button>
+                                        <button onClick={() => onGarmentImageChange(null)} className="p-1.5 bg-black/60 text-white rounded-md hover:bg-red-500 transition-all"><TrashIcon className="w-4 h-4" /></button>
                                      </div>
-                                 ))}
-                                 <button 
-                                     onClick={() => fileInputRef.current?.click()} 
-                                     className="aspect-square rounded-lg border-2 border-dashed border-light-border dark:border-dark-border flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-white/5 transition-all gap-2 group"
-                                 >
-                                     <UploadIcon className="w-6 h-6 text-gray-400 group-hover:text-blue-500" />
-                                     <span className="text-xs text-medium-text dark:text-medium-text-dark uppercase font-black text-[8px] tracking-[0.2em] group-hover:text-blue-500">Add Context</span>
-                                     <input type="file" ref={fileInputRef} multiple onChange={handleFileChange} className="hidden" accept="image/*" />
-                                 </button>
-                             </div>
+                                 </div>
+                             ) : (
+                                 <div onClick={() => fileInputRef.current?.click()} className="w-full h-40 rounded-lg border-2 border-dashed border-light-border dark:border-dark-border flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-gray-50 dark:hover:bg-white/5 transition-all gap-2">
+                                     <UploadIcon className="w-8 h-8 text-gray-400" />
+                                     <span className="text-xs text-medium-text dark:text-medium-text-dark uppercase font-black text-[8px] tracking-[0.2em]">Upload Garment Context</span>
+                                     <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                                 </div>
+                             )}
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <SliderControl label="Fabric Texture" value={config.fabricWeight} min={0} max={1.5} step={0.05} onChange={(v) => updateConfig('fabricWeight', v)} />

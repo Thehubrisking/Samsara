@@ -584,7 +584,7 @@ export default function App() {
         
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 auto-rows-min h-full">
             <div className="xl:col-span-3 flex flex-col gap-4 order-2 xl:order-1">
-                <div className="bg-light-card dark:bg-dark-card rounded-md border-[0.5px] border-dark-text/10 dark:border-white/10 overflow-hidden flex flex-col h-full xl:max-h-[88vh]">
+                <div className="bg-light-card dark:bg-dark-card rounded-md border-[0.5px] border-white/10 dark:border-white/10 overflow-hidden flex flex-col h-full xl:max-h-[88vh]">
                     <div className="p-5 border-b-[0.5px] border-dark-text/5 dark:border-white/5 bg-black/5 dark:bg-white/5 flex justify-between items-center">
                         <h2 className="text-[10px] font-extralight text-dark-text/40 dark:text-white/40 uppercase tracking-[0.5em] italic">Atelier Metadata</h2>
                         <div className="flex gap-2">
