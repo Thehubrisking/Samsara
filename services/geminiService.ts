@@ -4,7 +4,7 @@ import type { Part } from "@google/genai";
 import type { ImageFile, ImageModel, SafetyLevel, ImageResolution, GeneratedPromptResponse, AspectRatioOption } from "../types";
 
 const getAiClient = () => {
-    const API_KEY = process.env.API_KEY;
+    const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
     if (!API_KEY) {
         throw new Error("API_KEY environment variable not set");
     }
